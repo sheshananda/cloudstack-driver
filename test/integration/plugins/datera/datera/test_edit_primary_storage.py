@@ -196,11 +196,12 @@ class TestPrimaryStorage(cloudstackTestCase):
         # Verify in Cloudstack
         storage_pools_response = list_storage_pools(
             self.apiClient, clusterid=self.cluster.id)
-        for storage in storage_pools_response:
-            self.assertNotEqual(
-                storage.id,
-                self.primary_storage_id,
-                "Primary storage not deleted")
+        if len(storage_pools_response) > 0:
+            for storage in storage_pools_response:
+                self.assertNotEqual(
+                    storage.id,
+                    self.primary_storage_id,
+                    "Primary storage not deleted")
 
         # Verify in Datera
         flag = 0
@@ -462,8 +463,7 @@ class TestPrimaryStorage(cloudstackTestCase):
             ['storage-1']['volumes']['volume-1']['size'] * 1073741824)
         app_instance_response_iops = (
             app_instance_response['storage_instances']
-            ['storage-1']['volumes']['volume-1']['performance_policy']
-            ['total_iops_max'])
+            ['storage-1']['volumes']['volume-1'])
         app_instance_response_replica = (
             app_instance_response['storage_instances']
             ['storage-1']['volumes']['volume-1']['replica_count'])
@@ -549,10 +549,14 @@ class TestPrimaryStorage(cloudstackTestCase):
             storage_pools_response_disk,
             "Disk sizes are not same in xen and cloudsatck")
 
-        self.assertEqual(
-            storage_pools_response_iops,
-            app_instance_response_iops,
-            "IOPS values are incorrect")
+        if "performance_policy" in app_instance_response_iops:
+            datera_iops =  (
+                app_instance_response_iops["performance_policy"]
+                ["total_iops_max"])
+            self.assertEqual(
+                storage_pools_response_iops,
+                datera_iops,
+                "IOPS values are incorrect")
 
         cs_netPool = ''.join(cs_netPool).split("=")[1]
         self.assertEqual(

@@ -1,0 +1,4 @@
+requests
+xenapi
+cryptography
+mysql-connector-python
